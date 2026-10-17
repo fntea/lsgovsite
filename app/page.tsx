@@ -86,10 +86,9 @@ export default function Home() {
                 <div className="text-sm text-gray-700 space-y-0.5 mb-4">
                   <p className="uppercase">{job.city}</p>
                   <p>{job.type} - {job.salaryStr}</p>
-                  <p>Category: {job.category}</p>
-                  <p>Department: {job.department}</p>
+                  <p>Catégorie: {job.category}</p>
+                  <p>Département: {job.department}</p>
                 </div>
-                <p className="text-sm text-gray-600 line-clamp-2 mb-4">{job.description}</p>
                 <div className="flex justify-end items-center text-xs text-gray-500">
                   <div>{job.createdAt} | {job.status}</div>
                 </div>
