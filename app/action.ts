@@ -152,29 +152,38 @@ export async function updateApplicationStatus(formData: FormData) {
   redirect(`/admin/dashboard/applications/${jobId}`);
 }
 
+import bcrypt from 'bcryptjs';
+
 export async function loginAdmin(formData: FormData) {
   const username = formData.get('username') as string;
   const password = formData.get('password') as string;
 
-  // ASTUCE : Si aucun compte admin n'existe, on crée le compte par défaut
+  // Création du compte admin s'il n'existe pas (identifiants dans les variables d'environnement)
   const adminCount = await prisma.adminUser.count();
   if (adminCount === 0) {
-    await prisma.adminUser.create({
-      data: { username: 'admin', password: 'password123' }
-    });
+    const adminUsername = process.env.ADMIN_USERNAME;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (adminUsername && adminPassword) {
+      await prisma.adminUser.create({
+        data: {
+          username: adminUsername,
+          password: await bcrypt.hash(adminPassword, 10),
+        },
+      });
+    }
   }
 
-  // On cherche l'utilisateur
   const user = await prisma.adminUser.findUnique({ where: { username } });
 
-  // On vérifie le mot de passe (en texte brut pour l'instant)
-  if (user && user.password === password) {
-    // Si c'est bon, on crée un cookie valable 1 jour (le ticket d'entrée)
+  // Comparaison avec le hash (et non plus en texte brut)
+  const ok = user ? await bcrypt.compare(password, user.password) : false;
+
+  if (ok) {
     const cookieStore = await cookies();
-    cookieStore.set('admin_session', 'true', { 
+    cookieStore.set('admin_session', 'true', {
       maxAge: 60 * 60 * 24,
       httpOnly: true,
-      path: '/'
+      path: '/',
     });
     return { success: true };
   } else {
