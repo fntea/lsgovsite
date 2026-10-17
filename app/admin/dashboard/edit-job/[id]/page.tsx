@@ -1,15 +1,26 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
-import { updateJobOffer, getJobOfferById } from '@/app/action'; // Vérifiez le nom de votre fichier action
+import { updateJobOffer, getJobOfferById } from '@/app/action';
 import { redirect } from 'next/navigation';
 
-export default async function EditJobPage({ params }: { params: Promise<{ id: string }> }) {
-  // On doit d'abord "attendre" la promesse des paramètres
+export default function EditJobPage({ params }: { params: Promise<{ id: string }> }) {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-gray-100 flex items-center justify-center text-gray-500">
+          Chargement…
+        </div>
+      }
+    >
+      <EditJobContent params={params} />
+    </Suspense>
+  );
+}
+
+async function EditJobContent({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = await params;
-  
-  // On peut maintenant utiliser l'ID
   const job = await getJobOfferById(resolvedParams.id);
 
-  // Si l'offre n'existe pas (mauvaise URL), on renvoie au tableau de bord
   if (!job) {
     redirect('/admin/dashboard');
   }
@@ -35,9 +46,8 @@ export default async function EditJobPage({ params }: { params: Promise<{ id: st
           </h2>
 
           <form action={updateJobOffer} className="space-y-6 text-sm">
-            {/* CHAMP CACHÉ : Indispensable pour transmettre l'ID à la fonction de mise à jour */}
             <input type="hidden" name="id" value={job.id} />
-            
+
             <div className="grid grid-cols-2 gap-6">
               <div className="flex flex-col gap-1">
                 <label className="font-bold text-gray-700 uppercase">Titre du poste</label>
