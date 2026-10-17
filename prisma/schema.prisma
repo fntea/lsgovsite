@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// 1. L'offre d'emploi (Créée par les recruteurs/admins du serveur)
+model JobOffer {
+  id            String   @id @default(cuid()) // Génère un ID aléatoire unique (ex: "clp7a8b9c0000...")
+  title         String   // ex: OFFICIER DE POLICE (LSPD)
+  city          String   @default("VILLE DE LOS SANTOS, SA")
+  type          String   // ex: TEMPS PLEIN
+  salaryStr     String   // ex: $74,792.00 - $109,327.00 Annuellement
+  category      String   // ex: Sécurité Publique
+  department    String   // ex: LOS SANTOS POLICE DEPARTMENT
+  salaryRange   String   // ex: $74,792 à $109,327
+  description   String   // Le texte des Notes/Description
+  requirements  String   // Les prérequis minimums
+  processNotes  String   // Les étapes du processus (texte libre)
+  jobNumber     String   // Numéro RP de l'offre
+  status        String   @default("Continu") // Peut passer en "Fermé"
+  
+  createdAt     DateTime @default(now())
+
+  // Relation : Une offre possède plusieurs candidatures
+  applications  Application[]
+}
+
+// 2. La candidature (Envoyée par les joueurs)
+model Application {
+  id            String   @id @default(cuid())
+  
+  jobId         String   
+  job           JobOffer @relation(fields: [jobId], references: [id])
+  
+  characterName String   
+  ageRP         Int      
+  motivations   String   
+  experience    String?  
+  
+  discordName   String   
+  discordId     String   
+  ucpName       String   
+  
+  status        String   @default("EN_ATTENTE")
+  createdAt     DateTime @default(now())
+
+  // NOUVEAU : Le JSON complet de la candidature
+  rawData       String?  
+}
+
+// NOUVEAU : Table pour les comptes administrateurs
+model AdminUser {
+  id       String @id @default(cuid())
+  username String @unique
+  password String
+}
